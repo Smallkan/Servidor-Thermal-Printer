@@ -1,0 +1,14 @@
+{
+    "name": "clubeasc/thermalprinter",
+    "description": "Servidor POS Print Server",
+    "require": {
+        "hoa/websocket": "3.17.01.09",
+        "mike42/escpos-php": "^2.0",
+        "php": ">=5.4.0",
+        "nesbot/carbon": "^2.43"
+    },
+    "license": "MIT",
+    "autoload": {
+        "psr-4": {"ClubeASC\\ThermalPrinter\\": "entity/"}
+    }
+}
