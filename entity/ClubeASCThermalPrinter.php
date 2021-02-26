@@ -65,9 +65,9 @@ class ClubeASCThermalPrinter {
 
     private function invoicePrinting($data)
     {
-        $store_name = $data->pedido->estabelecimento->nome;
-        $store_address = $data->pedido->estabelecimento->endereco;
-        $order_id = $data->pedido->unique_pedido_id;
+        $store_name = $data->order->estabelecimento->nome_fantasia;
+        $store_address = $data->order->estabelecimento->logradouro;
+        $order_id = $data->order->unique_pedido_id;
 
         $this->printer->setJustification(Printer::JUSTIFY_CENTER);
 
@@ -130,19 +130,19 @@ class ClubeASCThermalPrinter {
         }
 
         if (!empty($data->printerData->show_customer_name)) {
-            $this->printer->text($data->order->user->name);
+            $this->printer->text($data->order->usuario->nome);
             $this->printer->feed();
         }
 
         if (!empty($data->printerData->show_customer_phone)) {
-            $this->printer->text($data->order->user->phone);
+            $this->printer->text($data->order->usuario->telefone);
             $this->printer->feed();
         }
 
         if (!empty($data->printerData->show_delivery_type)) {
             $this->printer->setEmphasis(true);
             //delivery order
-            if ($data->order->delivery_type == 1) {
+            if ($data->order->tipo_entrega == 1) {
                 $this->printer->text(empty($data->printerData->delivery_label) ? 'ENTREGA' : $data->printerData->delivery_label);
             } else {
                 //selfpickup order
@@ -151,8 +151,8 @@ class ClubeASCThermalPrinter {
             $this->printer->feed();
         }
 
-        if (!empty($data->printerData->show_delivery_address) && $data->pedido->tipo_entrega == 1) {
-            $this->printer->text($data->pedido->endereco);
+        if (!empty($data->printerData->show_delivery_address) && $data->order->tipo_entrega == 1) {
+            $this->printer->text($data->order->endereco);
             $this->printer->feed();
         }
 
@@ -173,60 +173,41 @@ class ClubeASCThermalPrinter {
         $this->printer->setEmphasis(false);
         $this->printer->text($this->drawLine($data->char_per_line));
 
-        foreach ($data->order->orderitems as $orderitem) {
+        // foreach ($data->order->orderitems as $orderitem) {
 
-            $itemTotal = ($orderitem->price + $this->calculateAddonTotal($orderitem->order_item_addons)) * $orderitem->quantity;
+        //     $itemTotal = ($orderitem->price + $this->calculateAddonTotal($orderitem->order_item_addons)) * $orderitem->quantity;
 
-            $orderItemAddons = count($orderitem->order_item_addons);
-            if ($orderItemAddons > 0) {
-                $addons = '';
-                foreach ($orderitem->order_item_addons as $addon) {
-                    $addons .= $addon->addon_name . ', ';
-                }
-                $addons = rtrim($addons, ', ');
-                $orderitem->addon_name = $addons;
-            }
+        //     $orderItemAddons = count($orderitem->order_item_addons);
+        //     if ($orderItemAddons > 0) {
+        //         $addons = '';
+        //         foreach ($orderitem->order_item_addons as $addon) {
+        //             $addons .= $addon->addon_name . ', ';
+        //         }
+        //         $addons = rtrim($addons, ', ');
+        //         $orderitem->addon_name = $addons;
+        //     }
 
-            // //print products/items
-            if ($orderItemAddons > 0) {
-                $string = rtrim($this->columnify($this->columnify($this->columnify($orderitem->quantity, $orderitem->name . ' (' . $orderitem->addon_name . ')', 12, 40, 0, 0, $data->char_per_line), floatval($orderitem->price), 55, 20, 0, 0, $data->char_per_line), floatval($itemTotal), 75, 25, 0, 0, $data->char_per_line));
-            } else {
-                $string = rtrim($this->columnify($this->columnify($this->columnify($orderitem->quantity, $orderitem->name, 12, 40, 0, 0, $data->char_per_line), floatval($orderitem->price), 55, 20, 0, 0, $data->char_per_line), floatval($itemTotal), 75, 25, 0, 0, $data->char_per_line));
-            }
+        //     // //print products/items
+        //     if ($orderItemAddons > 0) {
+        //         $string = rtrim($this->columnify($this->columnify($this->columnify($orderitem->quantity, $orderitem->name . ' (' . $orderitem->addon_name . ')', 12, 40, 0, 0, $data->char_per_line), floatval($orderitem->price), 55, 20, 0, 0, $data->char_per_line), floatval($itemTotal), 75, 25, 0, 0, $data->char_per_line));
+        //     } else {
+        //         $string = rtrim($this->columnify($this->columnify($this->columnify($orderitem->quantity, $orderitem->name, 12, 40, 0, 0, $data->char_per_line), floatval($orderitem->price), 55, 20, 0, 0, $data->char_per_line), floatval($itemTotal), 75, 25, 0, 0, $data->char_per_line));
+        //     }
 
-            $this->printer->text($string);
-            $this->printer->feed();
+        //     $this->printer->text($string);
+        //     $this->printer->feed();
 
-        }
+        // }
 
         $this->printer->feed();
         $this->printer->text($this->drawLine($data->char_per_line));
 
         $this->printer->setJustification(Printer::JUSTIFY_LEFT);
 
-        //coupon
-        if ($data->order->coupon_name != null) {
-            $coupon = $this->columnify($data->printerData->coupon_label . ' ', $data->order->coupon_name, 75, 25, 0, 0, $data->char_per_line);
-            $this->printer->text(rtrim($coupon));
-            $this->printer->feed();
-        }
-
-        //store charge
-        $storeCharge = $this->columnify($data->printerData->store_charge_label . ' ', floatval($data->order->restaurant_charge), 75, 25, 0, 0, $data->char_per_line);
-        $this->printer->text(rtrim($storeCharge));
-        $this->printer->feed();
-
         //delivery charge
-        $deliveryCharge = $this->columnify($data->printerData->delivery_charge_label . ' ', floatval($data->order->delivery_charge), 75, 25, 0, 0, $data->char_per_line);
+        $deliveryCharge = $this->columnify($data->printerData->delivery_charge_label . ' ', floatval($data->order->taxa_entrega), 75, 25, 0, 0, $data->char_per_line);
         $this->printer->text(rtrim($deliveryCharge));
         $this->printer->feed();
-
-        //Tax
-        if ($data->order->tax != null) {
-            $tax = $this->columnify($data->printerData->tax_label . ' ', $data->order->tax . '%', 75, 25, 0, 0, $data->char_per_line);
-            $this->printer->text(rtrim($tax));
-            $this->printer->feed();
-        }
 
         //Order Total
 
@@ -324,22 +305,22 @@ class ClubeASCThermalPrinter {
             $this->printer->text($data->order->user->name);
             $this->printer->feed();
 
-            $this->printer->text(!empty($data->printerData->order_id_label) ? $data->printerData->order_id_label . ' ' . $order_id : 'Order ID: ' . $order_id);
+            $this->printer->text(!empty($data->printerData->order_id_label) ? $data->printerData->order_id_label . ' ' . $order_id : 'N° do Pedido: ' . $order_id);
             $this->printer->feed();
             $created_at = Carbon::parse($data->order->created_at);
-            $this->printer->text(!empty($data->printerData->order_date_label) ? $data->printerData->order_date_label . ' ' . $created_at->format('Y-m-d h:i A') : 'Ordered Date: ' . $created_at->format('Y-m-d h:i A'));
+            $this->printer->text(!empty($data->printerData->order_date_label) ? $data->printerData->order_date_label . ' ' . $created_at->format('Y-m-d h:i A') : 'Data do Pedido: ' . $created_at->format('Y-m-d h:i A'));
             $this->printer->feed();
 
             $this->printer->setEmphasis(true);
             //delivery order
             if ($data->order->delivery_type == 1) {
                 $this->printer->setUnderline(1);
-                $this->printer->text(empty($data->printerData->delivery_label) ? 'DELIVERY' : $data->printerData->delivery_label);
+                $this->printer->text(empty($data->printerData->delivery_label) ? 'ENTREGA' : $data->printerData->delivery_label);
                 $this->printer->setUnderline(0);
             } else {
                 //selfpickup order
                 $this->printer->setUnderline(1);
-                $this->printer->text(empty($data->printerData->selfpickup_label) ? 'SELFPICKUP' : $data->printerData->selfpickup_label);
+                $this->printer->text(empty($data->printerData->selfpickup_label) ? 'COLETA' : $data->printerData->selfpickup_label);
                 $this->printer->setUnderline(0);
             }
             $this->printer->feed();
@@ -350,48 +331,48 @@ class ClubeASCThermalPrinter {
 
             //bill item header
             $this->printer->text($this->drawLine($data->char_per_line));
-            $string = $this->columnify(!empty($data->printerData->quantity_label) ? $data->printerData->quantity_label : 'QTY', ' ' . !empty($data->printerData->item_label) ? $data->printerData->item_label : 'ITEMS', 15, 80, 0, 0, $data->char_per_line);
+            $string = $this->columnify(!empty($data->printerData->quantity_label) ? $data->printerData->quantity_label : 'QTD', ' ' . !empty($data->printerData->item_label) ? $data->printerData->item_label : 'ITENS', 15, 80, 0, 0, $data->char_per_line);
             $this->printer->setEmphasis(true);
             $this->printer->text(rtrim($string));
             $this->printer->feed();
             $this->printer->setEmphasis(false);
             $this->printer->text($this->drawLine($data->char_per_line));
 
-            foreach ($data->order->orderitems as $orderitem) {
+            // foreach ($data->order->orderitems as $orderitem) {
 
-                $itemTotal = ($orderitem->price + $this->calculateAddonTotal($orderitem->order_item_addons)) * $orderitem->quantity;
+            //     $itemTotal = ($orderitem->price + $this->calculateAddonTotal($orderitem->order_item_addons)) * $orderitem->quantity;
 
-                //get addons and add to orderitem->addon_name
-                $orderItemAddons = count($orderitem->order_item_addons);
-                if ($orderItemAddons > 0) {
-                    $addons = '';
-                    foreach ($orderitem->order_item_addons as $addon) {
-                        $addons .= $addon->addon_name . ', ';
-                    }
-                    $addons = rtrim($addons, ', ');
-                    $orderitem->addon_name = $addons;
-                }
+            //     //get addons and add to orderitem->addon_name
+            //     $orderItemAddons = count($orderitem->order_item_addons);
+            //     if ($orderItemAddons > 0) {
+            //         $addons = '';
+            //         foreach ($orderitem->order_item_addons as $addon) {
+            //             $addons .= $addon->addon_name . ', ';
+            //         }
+            //         $addons = rtrim($addons, ', ');
+            //         $orderitem->addon_name = $addons;
+            //     }
 
-                // //print products/items
-                if ($orderItemAddons > 0) {
-                    $string = rtrim($this->columnify($orderitem->quantity, $orderitem->name, 15, 80, 0, 0, $data->char_per_line));
+            //     // //print products/items
+            //     if ($orderItemAddons > 0) {
+            //         $string = rtrim($this->columnify($orderitem->quantity, $orderitem->name, 15, 80, 0, 0, $data->char_per_line));
 
-                    $this->printer->text($string);
-                    $this->printer->feed();
-                    $this->printer->setReverseColors(true);
-                    $addons = rtrim($this->columnify('', $orderitem->addon_name, 0, 100, 0, 0, $data->char_per_line));
-                    $this->printer->text($addons . ' ');
-                    $this->printer->setReverseColors(false);
-                    $this->printer->feed();
+            //         $this->printer->text($string);
+            //         $this->printer->feed();
+            //         $this->printer->setReverseColors(true);
+            //         $addons = rtrim($this->columnify('', $orderitem->addon_name, 0, 100, 0, 0, $data->char_per_line));
+            //         $this->printer->text($addons . ' ');
+            //         $this->printer->setReverseColors(false);
+            //         $this->printer->feed();
 
-                } else {
-                    $string = rtrim($this->columnify($orderitem->quantity, $orderitem->name, 15, 100, 0, 0, $data->char_per_line));
-                    $this->printer->text($string);
-                    $this->printer->feed();
-                }
-                $this->printer->feed();
+            //     } else {
+            //         $string = rtrim($this->columnify($orderitem->quantity, $orderitem->name, 15, 100, 0, 0, $data->char_per_line));
+            //         $this->printer->text($string);
+            //         $this->printer->feed();
+            //     }
+            //     $this->printer->feed();
 
-            }
+            // }
 
             $this->printer->text($this->drawLine($data->char_per_line));
 

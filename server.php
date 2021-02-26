@@ -48,26 +48,26 @@ try {
 
                     //Se nulo, então imprime para ambos (dependendo se o KIT está habilitado ou não)
                     echo '---------------------------------------------------------', "\n";
-                    echo '| Número do pedido: ' . $printData->data->pedido->unique_pedido_id . ' |', "\n";
+                    echo '| Número do pedido: ' . $printData->data->order->unique_pedido_id . ' |', "\n";
 
                     if (empty($printData->data->printerData->print_kot)) {
                         echo '---------------------------------------------------------', "\n\n";
                     } else {
                         echo '---------------------------------------------------------', "\n";
-                        echo '| KOT númedo do Pedido: ' . $printData->data->pedido->unique_pedido_id . ' |', "\n";
+                        echo '| KOT númedo do Pedido: ' . $printData->data->order->unique_pedido_id . ' |', "\n";
                         echo '-----------------------------------------------------', "\n\n";
                     }
 
                 } elseif ($printData->data->print_type == 'invoice') {
 
                     echo '---------------------------------------------------------', "\n";
-                    echo '| Número do pedido: ' . $printData->data->pedido->unique_pedido_id . ' |', "\n";
+                    echo '| Número do pedido: ' . $printData->data->order->unique_pedido_id . ' |', "\n";
                     echo '---------------------------------------------------------', "\n\n";
 
                 } elseif ($printData->data->print_type == 'kot') {
 
                     echo '-----------------------------------------------------', "\n";
-                    echo '| KOT númedo do Pedido: ' . $printData->data->pedido->unique_pedido_id . ' |', "\n";
+                    echo '| KOT númedo do Pedido: ' . $printData->data->order->unique_pedido_id . ' |', "\n";
                     echo '-----------------------------------------------------', "\n\n";
 
                 }
